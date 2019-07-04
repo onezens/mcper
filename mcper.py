@@ -8,11 +8,8 @@ Copyright © 2019 onezen.cc. All rights reserved.
 """
 import sys
 import os
-import string
 
-xctheos_path = './xctheos.h'
 macroObjects = []
-cpTargetPath = './Tweak.xmi'
 
 class MacroObject(object):
 	"""docstring for MacroObject"""
@@ -62,10 +59,8 @@ def parse_macro(macro):
 	# print 'part_one: ', mo.pone, " part_two: ", mo.ptwo, " keyword: ", mo.keyword, " params: ", mo.params, ' paramsIsFull :', mo.paramsIsFull
 	macroObjects.append(mo)
 
-		
 
-
-def init_xctheos_macro():
+def init_xctheos_macro(xctheos_path):
 	xct = open(xctheos_path)
 	lineCount = 0
 	is_theos_macro = False
@@ -86,9 +81,8 @@ def init_xctheos_macro():
 			# print 'xctheos op segment macro end ', lineCount
 			continue
 		if is_theos_macro and is_op_segment:
-			parse_macro(line)
-			
-	print "line count: ", lineCount, ' configs: ', len(macroObjects)
+			parse_macro(line)		
+	# print "line count: ", lineCount, ' configs: ', len(macroObjects)
 
 
 def convertMacroLine(line):
@@ -126,22 +120,41 @@ def convertMacroLine(line):
 	return cline
 
 
-
-def preprocess():
+def preprocess(cpTargetPath, cmTargetPath):
 	t = open(cpTargetPath)
-	cmTargetPath = cpTargetPath.replace(cpTargetPath[cpTargetPath.rfind('.')+1: len(cpTargetPath)], 'xm')
 	w = open(cmTargetPath, 'w')
 	for line in t.readlines():
 		cline = convertMacroLine(line)
 		w.write(cline)
 	t.close()
-	w.close()
-			
+	w.close()	
 
 
 def main():
-	init_xctheos_macro()
-	preprocess()
+	if len(sys.argv)<3:
+		print 'Input Params Error! \nUseage: python mcper.py /path/to/xctheos.h /path/to/Tweak.xmi'
+		exit(0)
+	xctheos_path = os.path.abspath(os.path.join(os.getcwd(), sys.argv[1]))
+	cpTargetPath = os.path.abspath(os.path.join(os.getcwd(), sys.argv[2]))
+	cmTargetPath = cpTargetPath.replace(cpTargetPath[cpTargetPath.rfind('.')+1: len(cpTargetPath)], 'xm')
+	if len(sys.argv)==4:
+		cmTargetPath = os.path.abspath(os.path.join(os.getcwd(), sys.argv[3]))
+		if os.path.isdir(cmTargetPath):
+			cmTargetPath = os.path.join(cmTargetPath, os.path.basename(cpTargetPath).replace('xmi', 'xm'))
+	if len(xctheos_path)==0:
+		print 'Error xctheos.h path can not empty!'
+		exit(0)
+	if len(cpTargetPath)==0:
+		print 'convert target path can not empty!'
+		exit(0)
+	print 'xctheos_path: ', xctheos_path
+	print 'cpTargetPath: ', cpTargetPath
+	print 'cmTargetPath: ', cmTargetPath
+	init_xctheos_macro(xctheos_path)
+	preprocess(cpTargetPath,cmTargetPath)
+	print 'convert marco xctheos file completed!'
+	print 'output path: ', cmTargetPath
 
 if __name__ == '__main__':
 	main()
+
